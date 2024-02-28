@@ -20,7 +20,7 @@ def generate_diagram_code_in_child_process(view: str) -> tuple[dict, list[str]]:
     return result['code'], result['imported_modules']
 
 
-async def generate_svg(diagram_code: dict, tmp_folder: str) -> str:
+async def generate_svg(diagram_code: dict, tmp_folder: str, filename: str = "diagram") -> str:
     url = "https://kroki.io/structurizr/svg"
     async with httpx.AsyncClient() as client:
         resp = await client.post(url, data=diagram_code)
@@ -31,7 +31,7 @@ async def generate_svg(diagram_code: dict, tmp_folder: str) -> str:
             print(resp.content.decode())
         raise click.ClickException("Failed to create diagram")
 
-    svg_file_path = f"{tmp_folder}/diagram.svg"
+    svg_file_path = f"{tmp_folder}/{filename}.svg"
     async with aiofiles.open(svg_file_path, "w") as svg_file:
         await svg_file.write(resp.text)
 

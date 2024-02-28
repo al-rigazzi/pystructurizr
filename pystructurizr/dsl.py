@@ -6,7 +6,7 @@ from typing import Dict, List, Optional
 
 # pylint: disable=too-few-public-methods
 class Identifier:
-    counter = {}
+    counter: dict[str, int] = {}
 
     @staticmethod
     def make_identifier(name: str) -> str:
@@ -58,10 +58,10 @@ class Element:
         self.description = description if description else ""
         self.technology = technology if technology else ""
         self.tags = tags if tags else []
-        self.relationships = []
+        self.relationships: list[Relationship] = []
         self.instname = Identifier.make_identifier(name)
 
-    def uses(self, destination: str, description: Optional[str]=None, technology: Optional[str]=None) -> 'Relationship':
+    def uses(self, destination: "Element", description: Optional[str]=None, technology: Optional[str]=None) -> 'Relationship':
         relationship = Relationship(self, destination, description, technology)
         self.relationships.append(relationship)
         return relationship
@@ -108,7 +108,7 @@ class Component(Element):
 class Container(Element):
     def __init__(self, name: str, description: Optional[str]=None, technology: Optional[str]=None, tags: Optional[List[str]]=None):
         super().__init__(name, description, technology, tags)
-        self.elements = []
+        self.elements: list[Element] = []
 
     def __enter__(self):
         return self
@@ -156,7 +156,7 @@ class Container(Element):
 class SoftwareSystem(Element):
     def __init__(self, name: str, description: Optional[str]=None, technology: Optional[str]=None, tags: Optional[List[str]]=None):
         super().__init__(name, description, technology, tags)
-        self.elements = []
+        self.elements: list[Element] = []
 
     def __enter__(self):
         return self
@@ -204,7 +204,7 @@ class SoftwareSystem(Element):
 class Group(Element):
     def __init__(self, name: str):
         super().__init__(name)
-        self.elements = []
+        self.elements: list[Element] = []
 
     def __enter__(self):
         return self
@@ -273,7 +273,7 @@ class Group(Element):
 class Model(Element):
     def __init__(self, name: str):
         super().__init__(name)
-        self.elements = []
+        self.elements: list[Element] = []
 
     def __enter__(self):
         return self
@@ -335,13 +335,13 @@ class View:
         CONTAINER = "container"
         COMPONENT = "component"
 
-    def __init__(self, viewkind: Kind, element: Element, name: str, description: Optional[str]=None):
+    def __init__(self, viewkind: Kind, element: Element | None, name: str, description: Optional[str]=None):
         self.viewkind = viewkind
         self.element = element
         self.name = name
         self.description = description
-        self.includes = []
-        self.excludes = []
+        self.includes: list[Element] = []
+        self.excludes: list[Element] = []
 
     def include(self, element: Element) -> 'View':
         self.includes.append(element)
@@ -423,7 +423,7 @@ class Workspace:
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
 
-    def dump(self, dumper: Dumper = Dumper()) -> None:
+    def dump(self, dumper: Dumper = Dumper()) -> str:
         dumper.add('workspace {')
         dumper.indent()
 
@@ -461,6 +461,8 @@ class Workspace:
     # pylint: disable=invalid-name
     def Model(self, model: Optional[Model]=None, name: Optional[str]=None):
         if model is None:
+            if name is None:
+                raise ValueError("Either a model or a name must be specified")
             model = Model(name)
         self.models.append(model)
         return model

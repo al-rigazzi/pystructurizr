@@ -56,6 +56,19 @@ def dev(view):
 
 @click.command()
 @click.option('--view', prompt='Your view file (e.g. examples.single_file_example)',
+              help='The view file to develop.')
+def render(view):
+    click.echo(f"Setting up live preview of view {view}...")
+
+    path = os.path.curdir
+
+    print("Generating diagram...")
+    diagram_code, _ = generate_diagram_code_in_child_process(view)
+    asyncio.run(generate_svg(diagram_code, path, str(view).split(".")[-1]))
+
+
+@click.command()
+@click.option('--view', prompt='Your view file (e.g. examples.single_file_example)',
               help='The view file to generate and upload to cloud storage.')
 @click.option('--gcs-credentials', prompt='Path to json file containing Google Cloud Storage credentials', type=click.Path(exists=True),
               help='Path to the credentials.json file for Google Cloud Storage.')
@@ -88,6 +101,7 @@ def cli():
 cli.add_command(dump)
 cli.add_command(dev)
 cli.add_command(build)
+cli.add_command(render)
 
 if __name__ == '__main__':
     cli()
